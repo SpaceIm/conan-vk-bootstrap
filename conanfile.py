@@ -31,7 +31,7 @@ class VkBootstrapConan(ConanFile):
         if self.options.shared:
             del self.options.fPIC
         if self.settings.compiler.get_safe("cppstd"):
-            tools.check_min_cppstd(self, 11)
+            tools.check_min_cppstd(self, 14)
         if self.settings.compiler == "Visual Studio" and self.options.shared:
             raise ConanInvalidConfiguration("vk-boostrap shared not supported with Visual Studio")
 
@@ -54,7 +54,7 @@ class VkBootstrapConan(ConanFile):
         if self._cmake:
             return self._cmake
         self._cmake = CMake(self)
-        self._cmake.definitions["CMAKE_CXX_STANDARD"] = self.settings.compiler.get_safe("cppstd", 11)
+        self._cmake.definitions["CMAKE_CXX_STANDARD"] = self.settings.compiler.get_safe("cppstd", 14)
         self._cmake.definitions["VK_BOOTSTRAP_TEST"] = False
         self._cmake.configure()
         return self._cmake
