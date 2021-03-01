@@ -27,8 +27,8 @@ class VkBootstrapConan(ConanFile):
     def _compilers_minimum_version(self):
         return {
             "gcc": "5",
-            "Visual Studio": "14",
-            "clang": "3.9" if tools.stdcpp_library(self) == "stdc++" else "6",
+            "Visual Studio": "15",
+            "clang": "3.7" if tools.stdcpp_library(self) == "stdc++" else "6",
             "apple-clang": "5.1",
         }
 
