@@ -15,7 +15,7 @@ class VkBootstrapConan(ConanFile):
     options = {"shared": [True, False], "fPIC": [True, False]}
     default_options = {"shared": False, "fPIC": True}
 
-    exports_sources = "CMakeLists.txt"
+    exports_sources =  ["CMakeLists.txt", "patches/**"]
     generators = "cmake"
     _cmake = None
 
@@ -31,7 +31,7 @@ class VkBootstrapConan(ConanFile):
         if self.options.shared:
             del self.options.fPIC
         if self.settings.compiler.get_safe("cppstd"):
-            tools.check_min_cppstd(self, 11)
+            tools.check_min_cppstd(self, 14)
         if self.settings.compiler == "Visual Studio" and self.options.shared:
             raise ConanInvalidConfiguration("vk-boostrap shared not supported with Visual Studio")
 
@@ -43,22 +43,19 @@ class VkBootstrapConan(ConanFile):
         os.rename(self.name + "-" + self.version, self._source_subfolder)
 
     def _patch_sources(self):
+        for patch in self.conan_data.get("patches", {}).get(self.version, []):
+            tools.patch(**patch)
         cmakelists = os.path.join(self._source_subfolder, "CMakeLists.txt")
         # We don't need full Vulkan SDK, just headers, but vulkan-headers recipe alone can't emulate FindVulkan.cmake
         tools.replace_in_file(cmakelists, "find_package(Vulkan REQUIRED)", "")
         # No warnings as errors
         tools.replace_in_file(cmakelists, "-pedantic-errors", "")
         tools.replace_in_file(cmakelists, "/WX", "")
-        # inject link to libdl
-        tools.replace_in_file(cmakelists,
-                              "vk-bootstrap-compiler-warnings)",
-                              "vk-bootstrap-compiler-warnings ${CMAKE_DL_LIBS})")
 
     def _configure_cmake(self):
         if self._cmake:
             return self._cmake
         self._cmake = CMake(self)
-        self._cmake.definitions["CMAKE_CXX_STANDARD"] = self.settings.compiler.get_safe("cppstd", 11)
         self._cmake.definitions["VK_BOOTSTRAP_TEST"] = False
         self._cmake.configure()
         return self._cmake
@@ -70,12 +67,8 @@ class VkBootstrapConan(ConanFile):
 
     def package(self):
         self.copy("LICENSE.txt", dst="licenses", src=self._source_subfolder)
-        self.copy("*.h", dst="include", src=os.path.join(self._source_subfolder, "src"))
-        self.copy("*.lib", dst="lib", src="lib")
-        self.copy("*.dll", dst="bin", src="bin")
-        self.copy("*.a", dst="lib", src="lib")
-        self.copy("*.so*", dst="lib", src="lib", symlinks=True)
-        self.copy("*.dylib", dst="lib", src="lib", symlinks=True)
+        cmake = self._configure_cmake()
+        cmake.install()
 
     def package_info(self):
         self.cpp_info.libs = ["vk-bootstrap"]
