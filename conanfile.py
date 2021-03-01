@@ -49,6 +49,10 @@ class VkBootstrapConan(ConanFile):
         # No warnings as errors
         tools.replace_in_file(cmakelists, "-pedantic-errors", "")
         tools.replace_in_file(cmakelists, "/WX", "")
+        # inject link to libdl
+        tools.replace_in_file(cmakelists,
+                              "vk-bootstrap-compiler-warnings)",
+                              "vk-bootstrap-compiler-warnings ${CMAKE_DL_LIBS})")
 
     def _configure_cmake(self):
         if self._cmake:
@@ -75,3 +79,5 @@ class VkBootstrapConan(ConanFile):
 
     def package_info(self):
         self.cpp_info.libs = ["vk-bootstrap"]
+        if self.settings.os == "Linux":
+            self.cpp_info.system_libs = ["dl"]
