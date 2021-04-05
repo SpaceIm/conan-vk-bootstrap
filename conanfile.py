@@ -23,6 +23,15 @@ class VkBootstrapConan(ConanFile):
     def _source_subfolder(self):
         return "source_subfolder"
 
+    @property
+    def _compilers_minimum_version(self):
+        return {
+            "gcc": "5",
+            "Visual Studio": "15",
+            "clang": "3.7" if tools.stdcpp_library(self) == "stdc++" else "6",
+            "apple-clang": "10",
+        }
+
     def config_options(self):
         if self.settings.os == "Windows":
             del self.options.fPIC
@@ -31,7 +40,20 @@ class VkBootstrapConan(ConanFile):
         if self.options.shared:
             del self.options.fPIC
         if self.settings.compiler.get_safe("cppstd"):
-            tools.check_min_cppstd(self, 11)
+            tools.check_min_cppstd(self, 14)
+
+        def lazy_lt_semver(v1, v2):
+            lv1 = [int(v) for v in v1.split(".")]
+            lv2 = [int(v) for v in v2.split(".")]
+            min_length = min(len(lv1), len(lv2))
+            return lv1[:min_length] < lv2[:min_length]
+
+        minimum_version = self._compilers_minimum_version.get(str(self.settings.compiler), False)
+        if not minimum_version:
+            self.output.warn("vk-bootstrap requires C++14. Your compiler is unknown. Assuming it supports C++14.")
+        elif lazy_lt_semver(str(self.settings.compiler.version), minimum_version):
+            raise ConanInvalidConfiguration("vk-bootstrap requires C++14, which your compiler does not support.")
+
         if self.settings.compiler == "Visual Studio" and self.options.shared:
             raise ConanInvalidConfiguration("vk-boostrap shared not supported with Visual Studio")
 

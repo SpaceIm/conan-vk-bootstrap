@@ -6,7 +6,7 @@
          PRIVATE
 +        ${CMAKE_DL_LIBS}
          vk-bootstrap-compiler-warnings)
-+target_compile_features(vk-bootstrap PUBLIC cxx_std_11)
++target_compile_features(vk-bootstrap PUBLIC cxx_std_14)
 +include(GNUInstallDirs)
 +install(FILES src/VkBootstrap.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 +install(TARGETS vk-bootstrap
@@ -16,13 +16,3 @@
  
  option(VK_BOOTSTRAP_TEST "Test Vk-Bootstrap with glfw and Catch2" OFF)
  
---- a/src/VkBootstrap.h
-+++ b/src/VkBootstrap.h
-@@ -29,6 +29,7 @@ namespace vkb {
- namespace detail {
- 
- struct Error {
-+	Error(std::error_code type, VkResult vk_result = VK_SUCCESS): type{ type }, vk_result{ vk_result } {}
- 	std::error_code type;
- 	VkResult vk_result = VK_SUCCESS; // optional error value if a vulkan call failed
- };
